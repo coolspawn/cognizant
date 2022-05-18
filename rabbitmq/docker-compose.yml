@@ -1,0 +1,28 @@
+version: '3.9'
+
+services:
+  rabbit_mq:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: rabbitmq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - ./local_rabbitmq/etc/:/etc/backend/
+      - ./local_rabbitmq/data/:/var/lib/backend/
+      - ./local_rabbitmq/logs/:/var/log/backend/
+    environment:
+      - RABBITMQ_DEFAULT_USER=test
+      - RABBITMQ_DEFAULT_PASS=test
+      - RABBITMQ_NODENAME=rabbitnode@localhost
+      - RABBITMQ_USER=test
+      - RABBITMQ_PASSWORD=test
+    networks:
+      - rmq_network
+    restart: always
+
+networks:
+  rmq_network:
+    name: weather-api-network

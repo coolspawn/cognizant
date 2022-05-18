@@ -1,0 +1,222 @@
+openapi: 3.0.0
+info:
+  title: Weather API
+  version: v1
+servers:
+  - url: http://127.0.0.1:8000
+paths:
+  /api/v1/historical_data/{capital}:
+    get:
+      description: 'weather monitoring API'
+      parameters:
+        - in: path
+          name: capital
+          required: true
+          schema:
+            type: string
+            enum: [
+              Vienna,
+              Brussels,
+              Sofia,
+              Zagreb,
+              Nicosia,
+              Prague,
+              Copenhagen,
+              Tallinn,
+              Helsinki,
+              Paris,
+              Berlin,
+              Athens,
+              Budapest,
+              Dublin,
+              Rome,
+              Riga,
+              Vilnius,
+              Luxembourg,
+              Valleta,
+              Amsterdam,
+              Warsaw,
+              Lisbon,
+              Bucharest,
+              Bratislava,
+              Ljubljana,
+              Madrid,
+              Stockholm,
+              ]
+          description: European capital
+
+        - name: from_date
+          in: query
+          description: From period
+          required: false
+          schema:
+            type: string
+            format: date
+
+        - name: till_date
+          in: query
+          description: Till period
+          required: false
+          schema:
+            type: string
+            format: date
+
+        - name: agg
+          in: query
+          description: Aggregation
+          required: false
+          schema:
+            type: string
+            enum: [median, highest, lowest]
+
+        - name: cursor
+          in: query
+          description: Cursor
+          required: false
+          schema:
+            $ref: '#/components/schemas/Cursor'
+
+        - name: limit
+          in: query
+          description: limit of rows in response
+          required: false
+          schema:
+            $ref: '#/components/schemas/Limit'
+
+
+      responses:
+        "200":
+          description: ""
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  limit:
+                    type: integer
+                    description: Rows limit per response
+                    example: 1000
+
+                  cursor:
+                    type: number
+                    format: float
+                    nullable: false
+                    description: Cursor
+                    example: 12345635877.11244
+
+                  from_date:
+                    type: string
+                    format: date
+                    nullable: true
+                    description: From period
+                    example: '2021-01-01'
+
+                  till_date:
+                    type: string
+                    format: date
+                    nullable: true
+                    description: Till period
+                    example: '2021-02-01'
+
+                  aggregation:
+                    type: string
+                    nullable: true
+                    description: Aggregation type
+                    example: 'median'
+
+                  results:
+                    type: object
+                    items:
+                      $ref: '#/components/schemas/WeatherResult'
+        '400':
+          description: Some parameters are incorrect
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+
+    Cursor:
+      description: Cursor (timestamp)
+      example: 7546416846.5555
+      pattern: '^[0-9]*[.,]?[0-9]+$'
+
+    Limit:
+      description: limit of rows in response
+      type: integer
+      example: 100
+      nullable: true
+      minimum: 1
+      maximum: 300
+
+    WeatherResult:
+      type: object
+      properties:
+        city:
+          type: string
+          nullable: false
+          description: European capital
+          example: Prague
+
+        weather_data:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeatherData"
+
+    WeatherData:
+      type: object
+      properties:
+        measure_date:
+          type: string
+          format: date-time
+          description: Period
+          example: 2021-07-21T17:32:28Z
+
+        temperature:
+          type: number
+          format: float
+          description: Temperature Cel
+          example: 35.5
+          minimum: -273.15
+          maximum: 100
+
+        pressure:
+          type: number
+          format: float
+          description: Pressure HPA
+          example: 1058.0
+          minimum: 0
+
+        humidity:
+          type: number
+          format: double
+          description: Humidity in percents
+          example: 63.0
+          minimum: 0
+          maximum: 100
+
+        cloudiness:
+          type: number
+          format: int
+          description: Cloudiness oktas
+          example: 4
+          minimum: 0
+          maximum: 8
+
+        wind:
+          type: number
+          format: float
+          description: Wind m/s
+          example: 12.5
+          minimum: 0
+
+    Error:
+      description: error
+      type: object
+      properties:
+        error:
+          type: string
+        error_description:
+          type: string

@@ -1,0 +1,5 @@
+fastapi==0.78.0
+uvicorn==0.17.6
+celery==5.2.6
+pydantic==4.2.0
+clickhouse_driver=0.2.3

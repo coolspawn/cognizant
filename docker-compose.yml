@@ -1,0 +1,81 @@
+version: '3.9'
+
+services:
+  rabbit_mq:
+    build:
+      context: ./rabbitmq
+      dockerfile: Dockerfile
+    container_name: rabbit_mq
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbitmq_data:/etc/backend/
+      - rabbitmq_data:/var/lib/backend/
+      - rabbitmq_data:/var/log/backend/
+    environment:
+      - RABBITMQ_DEFAULT_USER=test
+      - RABBITMQ_DEFAULT_PASS=test
+      - RABBITMQ_NODENAME=rabbitnode@localhost
+      - RABBITMQ_USER=test
+      - RABBITMQ_PASSWORD=test
+    networks:
+      - wa_network
+    restart: always
+
+  ch_server:
+    image: yandex/clickhouse-server
+    ports:
+      - "8123:8123"
+    volumes:
+      - click_house_data:/var/lib/clickhouse
+    networks:
+        - wa_network
+
+  ch_client:
+    image: yandex/clickhouse-client
+    entrypoint:
+      - /bin/sleep
+    command:
+      - infinity
+    networks:
+        - wa_network
+
+  redis:
+    image: redis:7
+    container_name: redis_mq
+    environment:
+      - REDIS_PASSWORD=password123
+    ports:
+      - "6379:6379"
+    volumes:
+      - "redis_data:/app/redis/data"
+    networks:
+      - wa_network
+
+  celery-flower:
+    image: gregsi/latest-celery-flower-docker:1.0.0
+    container_name: celery-flower
+    environment:
+      - AMQP_USERNAME=test
+      - AMQP_PASSWORD=test
+      - AMQP_ADMIN_USERNAME=test
+      - AMQP_ADMIN_PASSWORD=test
+      - AMQP_HOST=rabbit_mq
+      - AMQP_PORT=5672
+      - AMQP_ADMIN_HOST=rabbit_mq
+      - AMQP_ADMIN_PORT=15672
+      - FLOWER_BASIC_AUTH=test:test
+    ports:
+      - "5555:5555"
+    networks:
+      - wa_network
+
+volumes:
+  rabbitmq_data:
+  redis_data:
+  click_house_data:
+
+networks:
+  wa_network:
+    name: weather-api-network
