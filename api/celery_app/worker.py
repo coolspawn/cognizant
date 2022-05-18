@@ -3,7 +3,7 @@ from time import sleep
 
 from celery import current_task
 
-from celery_main import celery_instance
+from .celery_main import celery_instance
 
 
 @celery_instance.task(acks_late=True)
