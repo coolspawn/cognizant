@@ -11,53 +11,8 @@ from typing import Any, List, Optional, Union
 from pydantic import BaseModel, Field, confloat, conint
 
 
-class Cursor(BaseModel):
-    __root__: Any = Field(
-        ..., description='Cursor (timestamp)', example=7546416846.5555
-    )
-
-
-class Limit(BaseModel):
-    __root__: Optional[conint(ge=1, le=300)] = Field(
-        None, description='limit of rows in response', example=100
-    )
-
-
-class WeatherData(BaseModel):
-    measure_date: Optional[datetime] = Field(
-        None, description='Period', example='2021-07-21T17:32:28Z'
-    )
-    temperature: Optional[confloat(ge=-273.15, le=100.0)] = Field(
-        None, description='Temperature Cel', example=35.5
-    )
-    pressure: Optional[confloat(ge=0.0)] = Field(
-        None, description='Pressure HPA', example=1058.0
-    )
-    humidity: Optional[confloat(ge=0.0, le=100.0)] = Field(
-        None, description='Humidity in percents', example=63.0
-    )
-    cloudiness: Optional[confloat(ge=0.0, le=8.0)] = Field(
-        None, description='Cloudiness oktas', example=4
-    )
-    wind: Optional[confloat(ge=0.0)] = Field(None, description='Wind m/s', example=12.5)
-
-
-class Error(BaseModel):
-    error: Optional[str] = None
-    error_description: Optional[str] = None
-
-
-class Agg(Enum):
-    median = 'median'
-    highest = 'highest'
-    lowest = 'lowest'
-
-
-class Results(BaseModel):
-    pass
-
-
-class Capital(Enum):
+#TODO put into database
+class Cities(Enum):
     Vienna = 'Vienna'
     Brussels = 'Brussels'
     Sofia = 'Sofia'
@@ -87,9 +42,37 @@ class Capital(Enum):
     Stockholm = 'Stockholm'
 
 
-class WeatherResult(BaseModel):
-    city: Optional[str] = Field(None, description='European capital', example='Prague')
-    weather_data: Optional[List[WeatherData]] = None
+class WeatherData(BaseModel):
+    city: str = Field(
+        description='City', example='Vienna'
+    )
+    measure_date: Optional[datetime] = Field(
+        None, description='Period', example='2021-07-21T17:32:28Z'
+    )
+    temperature: Optional[confloat(ge=-273.15, le=100.0)] = Field(
+        None, description='Temperature Cel', example=35.5
+    )
+    pressure: Optional[confloat(ge=0.0)] = Field(
+        None, description='Pressure HPA', example=1058.0
+    )
+    humidity: Optional[confloat(ge=0.0, le=100.0)] = Field(
+        None, description='Humidity in percents', example=63.0
+    )
+    cloudiness: Optional[confloat(ge=0.0, le=100.0)] = Field(
+        None, description='Cloudiness oktas', example=4
+    )
+    wind: Optional[confloat(ge=0.0)] = Field(None, description='Wind m/s', example=12.5)
+
+
+class Error(BaseModel):
+    error: Optional[str] = None
+    error_description: Optional[str] = None
+
+
+class Aggregations(Enum):
+    median = 'avg'
+    highest = 'max'
+    lowest = 'min'
 
 
 class ApiV1HistoricalDataCapitalGetResponse(BaseModel):
@@ -108,4 +91,7 @@ class ApiV1HistoricalDataCapitalGetResponse(BaseModel):
     aggregation: Optional[str] = Field(
         None, description='Aggregation type', example='median'
     )
-    results: Optional[Union[List[WeatherResult], Results]] = None
+    target: Optional[str] = Field(
+        None, description='Target value to agreate', example='pressure'
+    )
+    results: Optional[List[WeatherData]] = []

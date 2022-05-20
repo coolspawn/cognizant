@@ -4,21 +4,19 @@
 
 from __future__ import annotations
 
-from datetime import date
-from typing import Optional, Union
+from datetime import date, datetime
+from typing import Optional
 
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from celery_app.celery_main import celery_instance
 
-from models import (
-    ApiV1HistoricalDataCapitalGetResponse,
-    Capital,
-    Cursor,
-    Error,
-    Limit,
-    Agg,
+from api.clickhouse.connector import ch_client
+from api.weather_data.models import (
+    ApiV1HistoricalDataCapitalGetResponse, WeatherData,
 )
+from api.weather_data.serializers import AsyncWeatherDataSerializer
+
+ach_connector = AsyncWeatherDataSerializer()
 
 app = FastAPI(
     title='Weather API',
@@ -34,31 +32,46 @@ app.add_middleware(
 )
 
 
-def celery_on_message(body):
-    print(body)
+@app.on_event('startup')
+async def startup():
+    await ach_connector.connect()
+
+#TODO move to route
+@app.get('/init_db')
+async def initialize_db():
+    # client does not suport multiple statement
+    ch_client.execute('CREATE DATABASE IF NOT EXISTS db_weather;')
+    with open('./clickhouse/db_struct.ddl', 'r') as f:
+        ddl = f.read()
+        ch_client.execute(ddl)
+    return 'done!'
 
 
-def background_on_message(task):
-    print(task.get(on_message=celery_on_message, propagate=False))
 
-
-@app.get(
-    '/api/v1/historical_data/{capital}',
-    response_model=ApiV1HistoricalDataCapitalGetResponse,
-    responses={'400': {'model': Error}},
-)
+@app.get('/api/v1/historical_data/{capital}')
 async def get_api_v1_historical_data_capital(
-        capital: Capital,
-        background_task: BackgroundTasks,
+        capital: str,
         from_date: Optional[date] = None,
         till_date: Optional[date] = None,
-        agg: Optional[Agg] = None,
-        cursor: Optional[Cursor] = None,
-        limit: Optional[Limit] = None,
+        aggregation: Optional[str] = None,
+        target: Optional[str] = None,
+        cursor: Optional[float] = None,
+        limit: Optional[int] = 100,
 
-) -> Union[ApiV1HistoricalDataCapitalGetResponse, Error]:
-    task = celery_instance.send_task(
-        "celery_app.worker.get_weather_data", args=[capital])
-    print(task)
-    background_task.add_task(background_on_message, task)
-    return {"message": "No weather data yet"}
+):
+    params = {
+        'capital': capital,
+        'from_date': from_date,
+        'till_date': till_date,
+        'cursor': datetime.fromtimestamp(cursor) if cursor else None,
+        'limit': limit,
+        'aggregation': aggregation,
+        'target': target,
+    }
+    query_set = await ach_connector.get_queryset(**params)
+    results = [WeatherData(**row) for row in query_set]
+    cursor = query_set[-1]['measure_date'].timestamp()
+    params.update({'cursor': cursor})
+    resp = ApiV1HistoricalDataCapitalGetResponse(results=results, **params)
+
+    return resp
