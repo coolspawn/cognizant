@@ -1,15 +1,14 @@
 import datetime
-import pandas as pd
 
-from aiochclient import ChClient
-from aiohttp import ClientSession
+import pandas as pd
+from api.clickhouse.async_connector import db
 from api.weather_data.models import WeatherData
 
 tokens = {
     'capital': """city = '%s'""",
     'from_date': """measure_date >= '%s'""",
     'till_date': """measure_date <= '%s'""",
-    'cursor': """measure_date > '%s'""",
+    'cursor': """measure_date > %s""",
 }
 
 
@@ -42,8 +41,8 @@ async def get_query(**kwargs):
         'limit': f'LIMIT {limit}',
     }
     query = '%(select)s FROM %(table_name)s %(conditions)s %(order_by)s %(limit)s'
-    query = query % params
-    return query
+
+    return query % params
 
 
 async def aggregate_rows(rows, column, func_name):
@@ -54,11 +53,11 @@ async def aggregate_rows(rows, column, func_name):
         'avg': df[df[column] == df[column].median()],
     }
 
-    agg_rows = aggs.get(func_name).to_dict('records')
-    return agg_rows
+    return aggs.get(func_name).to_dict('records')
 
 
 class WeatherDataSerializer:
+    """Serializer for extracting data."""
 
     def serialize(self, raw_data):
         main = raw_data['main']
@@ -69,29 +68,19 @@ class WeatherDataSerializer:
             'pressure': main['pressure'],
             'humidity': main['humidity'],
             'cloudiness': raw_data['clouds']['all'],
-            'wind': raw_data['wind']['speed']
+            'wind': raw_data['wind']['speed'],
         }
-        wd = WeatherData(**wd_vals)
-        return wd
+        return WeatherData(**wd_vals)
 
 
 class AsyncWeatherDataSerializer:
-    def __init__(self):
-        self.ahc_client = None
-
-    async def connect(self):
-        s = ClientSession()
-        self.ahc_client = ChClient(s, database='db_weather')
-        await self.ahc_client.is_alive()
-
-    async def disconnect(self):
-        await self.ahc_client.close()
+    """Serializer for response."""
 
     async def get_queryset(self, **kwargs):
         agg_query = await get_query(**kwargs)
-        all_rows = await self.ahc_client.fetch(agg_query)
+        all_rows = await db.ahc_client.fetch(agg_query)
         agg_func = kwargs.get('aggregation')
-        if agg_func:
+        if agg_func and all_rows:
             target = kwargs.get('target')
             all_rows = await aggregate_rows(all_rows, target, agg_func)
 

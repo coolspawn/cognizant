@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  ch_server:
+    image: yandex/clickhouse-server
+    ports:
+      - '8123:8123'
+      - '9000:9000'
+      - '9009:9009'
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - click_house_data:/var/lib/clickhouse
+    networks:
+      - wa_network
+
+  app:
+    build:
+      context: .
+      dockerfile: ./tests/Dockerfile
+    container_name: weather-api
+    ports:
+      - '8000:8000'
+    environment:
+      - ENVIRONMENT=DEV
+    depends_on:
+      - ch_server
+    volumes:
+      - ./:/app
+    networks:
+      - wa_network
+
+volumes:
+  click_house_data:
+
+networks:
+  wa_network:
+    name: weather-api-network

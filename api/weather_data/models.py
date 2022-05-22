@@ -4,64 +4,63 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import datetime
 from enum import Enum
-from typing import Any, List, Optional, Union
+from typing import List, Optional
 
-from pydantic import BaseModel, Field, confloat, conint
+from pydantic import BaseModel, Field, confloat
 
 
-#TODO put into database
 class Cities(Enum):
-    Vienna = 'Vienna'
-    Brussels = 'Brussels'
-    Sofia = 'Sofia'
-    Zagreb = 'Zagreb'
-    Nicosia = 'Nicosia'
-    Prague = 'Prague'
-    Copenhagen = 'Copenhagen'
-    Tallinn = 'Tallinn'
-    Helsinki = 'Helsinki'
-    Paris = 'Paris'
-    Berlin = 'Berlin'
-    Athens = 'Athens'
-    Budapest = 'Budapest'
-    Dublin = 'Dublin'
-    Rome = 'Rome'
-    Riga = 'Riga'
-    Vilnius = 'Vilnius'
-    Luxembourg = 'Luxembourg'
-    Valleta = 'Valleta'
-    Amsterdam = 'Amsterdam'
-    Warsaw = 'Warsaw'
-    Lisbon = 'Lisbon'
-    Bucharest = 'Bucharest'
-    Bratislava = 'Bratislava'
-    Ljubljana = 'Ljubljana'
-    Madrid = 'Madrid'
-    Stockholm = 'Stockholm'
+    vienna = 'Vienna'
+    brussels = 'Brussels'
+    sofia = 'Sofia'
+    zagreb = 'Zagreb'
+    nicosia = 'Nicosia'
+    prague = 'Prague'
+    copenhagen = 'Copenhagen'
+    tallinn = 'Tallinn'
+    helsinki = 'Helsinki'
+    paris = 'Paris'
+    berlin = 'Berlin'
+    athens = 'Athens'
+    budapest = 'Budapest'
+    dublin = 'Dublin'
+    rome = 'Rome'
+    riga = 'Riga'
+    vilnius = 'Vilnius'
+    luxembourg = 'Luxembourg'
+    valleta = 'Valleta'
+    amsterdam = 'Amsterdam'
+    warsaw = 'Warsaw'
+    lisbon = 'Lisbon'
+    bucharest = 'Bucharest'
+    bratislava = 'Bratislava'
+    ljubljana = 'Ljubljana'
+    madrid = 'Madrid'
+    stockholm = 'Stockholm'
 
 
 class WeatherData(BaseModel):
     city: str = Field(
-        description='City', example='Vienna'
+        description='City', example='Vienna',
     )
     measure_date: Optional[datetime] = Field(
-        None, description='Period', example='2021-07-21T17:32:28Z'
+        None, description='Period', example='2021-07-21T17:32:28Z',
     )
     temperature: Optional[confloat(ge=-273.15, le=100.0)] = Field(
-        None, description='Temperature Cel', example=35.5
+        None, description='Temperature Cel', example=35.5,
     )
-    pressure: Optional[confloat(ge=0.0)] = Field(
-        None, description='Pressure HPA', example=1058.0
+    pressure: Optional[confloat(ge=0)] = Field(
+        None, description='Pressure HPA', example=1058.0,
     )
-    humidity: Optional[confloat(ge=0.0, le=100.0)] = Field(
-        None, description='Humidity in percents', example=63.0
+    humidity: Optional[confloat(ge=0, le=100.0)] = Field(
+        None, description='Humidity in percents', example=63.0,
     )
-    cloudiness: Optional[confloat(ge=0.0, le=100.0)] = Field(
-        None, description='Cloudiness oktas', example=4
+    cloudiness: Optional[confloat(ge=0, le=100.0)] = Field(
+        None, description='Cloudiness oktas', example=4,
     )
-    wind: Optional[confloat(ge=0.0)] = Field(None, description='Wind m/s', example=12.5)
+    wind: Optional[confloat(ge=0)] = Field(None, description='Wind m/s', example=12.5)
 
 
 class Error(BaseModel):
@@ -77,21 +76,21 @@ class Aggregations(Enum):
 
 class ApiV1HistoricalDataCapitalGetResponse(BaseModel):
     limit: Optional[int] = Field(
-        None, description='Rows limit per response', example=1000
+        None, description='Rows limit per response', example=1000,
     )
     cursor: Optional[float] = Field(
-        None, description='Cursor', example=12345635877.11244
+        None, description='Cursor', example=12345635877.11244,
     )
-    from_date: Optional[date] = Field(
-        None, description='From period', example='2021-01-01'
+    from_date: Optional[datetime] = Field(
+        None, description='From period', example='2021-01-01',
     )
-    till_date: Optional[date] = Field(
-        None, description='Till period', example='2021-02-01'
+    till_date: Optional[datetime] = Field(
+        None, description='Till period', example='2021-02-01',
     )
     aggregation: Optional[str] = Field(
-        None, description='Aggregation type', example='median'
+        None, description='Aggregation type', example='median',
     )
     target: Optional[str] = Field(
-        None, description='Target value to agreate', example='pressure'
+        None, description='Target value to agreate', example='pressure',
     )
     results: Optional[List[WeatherData]] = []

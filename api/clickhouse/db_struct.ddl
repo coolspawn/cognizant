@@ -1,3 +1,5 @@
+CREATE DATABASE IF NOT EXISTS db_weather;
+
 CREATE TABLE IF NOT EXISTS db_weather.facts(
     city               String,
     measure_date       Datetime,

@@ -1,8 +1,14 @@
+aiohttp==3.8.1
 fastapi==0.78.0
 uvicorn==0.17.6
 celery==5.2.6
-pydantic==4.2.0
-clickhouse_driver=0.2.3
+pydantic==1.9.1
+clickhouse_driver==0.2.3
 aiochclient==2.1.0
-python-dotenv==0.20.0
 pandas==1.4.2
+pytest_asyncio==0.18.3
+pytest
+pytest-mock==3.7.0
+requests==2.27.1
+redis==4.3.1
+httpx==0.22.0

@@ -7,8 +7,9 @@ git clone git@github.com:coolspawn/cognizant.git
 ```
 ### start project (locally in root project directory):
 ```code
-docker-compose up --bilid -d
-uvicorn main:app --reload
+export ENVIRONMENT=LOCAL
+docker-compose -f docker-compose.local.yml up --bilid -d
+uvicorn api.main:app --reload
 ```
 
 #### start celery and celery_beat:

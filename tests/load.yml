@@ -1,0 +1,17 @@
+overload:
+  enabled: true
+  package: yandextank.plugins.DataUploader
+  token_file: "token.txt"
+
+phantom:
+  address: localhost:8080 # [Target's address]:[target's port]
+  uris:
+    - /api/v1/historical_data/Vienna
+    - /ping
+  load_profile:
+    load_type: rps
+    schedule: line(1, 840, 2m)
+console:
+  enabled: false # enable console output
+telegraf:
+  enabled: false
