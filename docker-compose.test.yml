@@ -3,6 +3,9 @@ version: '3.9'
 services:
   ch_server:
     image: yandex/clickhouse-server
+    depends_on:
+      - ch-sub-1
+      - ch-sub-2
     ports:
       - '8123:8123'
       - '9000:9000'
@@ -14,6 +17,34 @@ services:
         hard: 262144
     volumes:
       - click_house_data:/var/lib/clickhouse
+      - master-logs:/var/log/clickhouse-server
+      - ./api/clickhouse/master_config.xml:/etc/clickhouse-server/config.xml
+    networks:
+      - wa_network
+
+  ch-sub-1:
+    container_name: ch_sub_1
+    image: yandex/clickhouse-server
+    ports:
+      - '9001:9000'
+      - '8124:8123'
+    volumes:
+      - ch-sub-1-data:/var/lib/clickhouse
+      - ch-sub-1-logs:/var/log/clickhouse-server
+      - ./api/clickhouse/sub_config.xml:/etc/clickhouse-server/config.xml
+    networks:
+      - wa_network
+
+  ch-sub-2:
+    container_name: ch_sub_2
+    image: yandex/clickhouse-server
+    ports:
+      - '9002:9000'
+      - '8125:8123'
+    volumes:
+      - ch-sub-2-data:/var/lib/clickhouse
+      - ch-sub-2-logs:/var/log/clickhouse-server
+      - ./api/clickhouse/sub_config.xml:/etc/clickhouse-server/config.xml
     networks:
       - wa_network
 
@@ -35,6 +66,11 @@ services:
 
 volumes:
   click_house_data:
+  master-logs:
+  ch-sub-1-data:
+  ch-sub-1-logs:
+  ch-sub-2-data:
+  ch-sub-2-logs:
 
 networks:
   wa_network:

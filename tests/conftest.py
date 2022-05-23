@@ -1,9 +1,12 @@
+from random import randrange
+
 import pytest
 import pytest_asyncio
 from aiohttp.test_utils import TestClient
 
-from api.clickhouse.async_connector import db
 from api.clickhouse.connector import ch_client
+from api.clickhouse.create_cluster import create_cluster
+from api.clickhouse.delete_cluster import delete_cluster
 from api.main import app
 from httpx import AsyncClient
 
@@ -18,16 +21,10 @@ def ord_client():
 
 @pytest_asyncio.fixture(autouse=True)
 async def database():
-    ch_client.execute('DROP DATABASE IF EXISTS db_weather')
-    with open('api/clickhouse/db_struct.ddl', 'r') as f:
-        ddl = f.read()
-        for command in ddl.split(';'):
-            if command:
-                ch_client.execute(command)
-    await db.connect()
+    delete_cluster()
+    create_cluster()
     yield
-    ch_client.execute('DROP DATABASE IF EXISTS db_weather')
-    await db.disconnect()
+    delete_cluster()
 
 
 @pytest_asyncio.fixture()
@@ -69,7 +66,7 @@ def ext_api_json_resp():
         "clouds": {
             "all": 40
         },
-        "dt": 1653126543,
+        "dt": 1653126543 + randrange(10, 3600),
         "sys": {
             "type": 2,
             "id": 2037452,
@@ -83,21 +80,3 @@ def ext_api_json_resp():
         "cod": 200
     }
     yield resp
-
-
-@pytest.fixture()
-def request_cases():
-    url = '/api/v1/historical_data'
-    cases = [
-        (f'{url}/Vienna'),
-        (f'{url}/Vienna?limit=2', lambda l: len(l)),
-        (f'{url}/Vienna?from_date=2022-05-19'),
-        (f'{url}/Vienna?till_date=2022-05-21'),
-        (f'{url}/Vienna?from_date=2022-05-19&till_date=2022-05-21'),
-        (f'{url}/Vienna?cursor=1652995527.0'),
-        (f'{url}/Vienna?aggregation=max&target=pressure'),
-        (f'{url}/Vienna?aggregation=min&target=temperature'),
-        (f'{url}/Vienna?aggregation=avg&target=humidity'),
-        (f'{url}/Vienna?from_date=2022-05-19&till_date=2022-05-21&limit=1&aggregation=max&target=wind'),
-    ]
-    yield cases

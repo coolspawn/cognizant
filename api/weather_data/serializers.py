@@ -1,6 +1,8 @@
 import datetime
 
 import pandas as pd
+from asynch.cursors import DictCursor
+
 from api.clickhouse.async_connector import db
 from api.weather_data.models import WeatherData
 
@@ -45,6 +47,38 @@ async def get_query(**kwargs):
     return query % params
 
 
+async def get_aggregated_query(**kwargs):
+    select = 'SELECT *'
+    table_name = kwargs.get('table_name', 'db_weather.facts')
+    conditions = await get_conditions(**kwargs)
+    order_by = kwargs.get('order_by', 'ORDER BY measure_date')
+    limit = kwargs.get('limit', 100)
+    aggregation = kwargs.get('aggregation')
+    params = {
+        'select': select,
+        'table_name': table_name,
+        'conditions': conditions,
+        'order_by': order_by,
+        'limit': f'LIMIT {limit}',
+    }
+    query = f"""
+            select 
+            temp_agg.val as temperature,
+            temp_agg.city as city,
+            facts.measure_date
+            From
+            (SELECT {aggregation}(temperature) as val, city
+            FROM {table_name}
+            {conditions}
+            group by city) as temp_agg
+            left join 
+            (select * from {table_name} {conditions}) as facts 
+            on temp_agg.val = facts.temperature
+        """
+
+    return query
+
+
 async def aggregate_rows(rows, column, func_name):
     df = pd.DataFrame(rows)
     aggs = {
@@ -78,10 +112,24 @@ class AsyncWeatherDataSerializer:
 
     async def get_queryset(self, **kwargs):
         agg_query = await get_query(**kwargs)
-        all_rows = await db.ahc_client.fetch(agg_query)
+        shard_pool, host = await db.get_shard_pool()
+        async with shard_pool.acquire() as conn:
+            async with conn.cursor(cursor=DictCursor) as cursor:
+                await cursor.execute(agg_query)
+                all_rows = cursor.fetchall()
         agg_func = kwargs.get('aggregation')
         if agg_func and all_rows:
             target = kwargs.get('target')
             all_rows = await aggregate_rows(all_rows, target, agg_func)
 
         return all_rows
+
+    async def get_aggregated_queryset(self, **kwargs):
+        agg_query = await get_aggregated_query(**kwargs)
+        shard_pool, host = await db.get_shard_pool()
+        async with shard_pool.acquire() as conn:
+            async with conn.cursor(cursor=DictCursor) as cursor:
+                await cursor.execute(agg_query)
+                all_rows = cursor.fetchall()
+
+        return all_rows, host

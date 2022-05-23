@@ -1,0 +1,128 @@
+<?xml version="1.0"?>
+<yandex>
+    <logger>
+        <level>trace</level>
+        <log>/var/log/clickhouse-server/clickhouse-server.log</log>
+        <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+        <size>1000M</size>
+        <count>10</count>
+    </logger>
+
+
+    <http_port>8123</http_port>
+    <openSSL>
+        <server>
+            <certificateFile>server.crt</certificateFile>
+            <privateKeyFile>server.key</privateKeyFile>
+            <dhParamsFile>dhparam.pem</dhParamsFile>
+            <loadDefaultCAFile>true</loadDefaultCAFile>
+            <cacheSessions>true</cacheSessions>
+            <disableProtocols>sslv2,sslv3</disableProtocols>
+            <preferServerCiphers>true</preferServerCiphers>
+        </server>
+        <client>
+            <loadDefaultCAFile>true</loadDefaultCAFile>
+            <cacheSessions>true</cacheSessions>
+            <disableProtocols>sslv2,sslv3</disableProtocols>
+            <preferServerCiphers>true</preferServerCiphers>
+            <invalidCertificateHandler>
+                <name>RejectCertificateHandler</name>
+            </invalidCertificateHandler>
+        </client>
+    </openSSL>
+
+
+    <tcp_port>9000</tcp_port>
+    <listen_host>::</listen_host>
+    <listen_host>127.0.0.1</listen_host>
+
+    <max_connections>10096</max_connections>
+    <keep_alive_timeout>3</keep_alive_timeout>
+
+    <max_concurrent_queries>840</max_concurrent_queries>
+
+    <uncompressed_cache_size>8589934592</uncompressed_cache_size>
+
+    <mark_cache_size>5368709120</mark_cache_size>
+
+    <path>/var/lib/clickhouse/</path>
+
+    <tmp_path>/var/lib/clickhouse/tmp/</tmp_path>
+
+    <users_config>users.xml</users_config>
+
+
+    <default_profile>default</default_profile>
+
+
+    <default_database>default</default_database>
+
+    <!-- CLUSTER!. -->
+    <remote_servers>
+        <example_cluster>
+            <shard>
+                <replica>
+                    <host>ch-sub-1</host>
+                    <port>9000</port>
+                </replica>
+            </shard>
+            <shard>
+                <replica>
+                    <host>ch-sub-2</host>
+                    <port>9000</port>
+                </replica>
+            </shard>
+        </example_cluster>
+    </remote_servers>
+
+    <builtin_dictionaries_reload_interval>3600</builtin_dictionaries_reload_interval>
+
+
+
+    <query_log>
+
+        <database>system</database>
+        <table>query_log</table>
+
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </query_log>
+
+
+
+
+    <dictionaries_config>*_dictionary.xml</dictionaries_config>
+
+    <resharding>
+        <task_queue_path>/clickhouse/task_queue</task_queue_path>
+    </resharding>
+
+    <graphite_rollup_example>
+        <pattern>
+            <regexp>click_cost</regexp>
+            <function>any</function>
+            <retention>
+                <age>0</age>
+                <precision>3600</precision>
+            </retention>
+            <retention>
+                <age>86400</age>
+                <precision>60</precision>
+            </retention>
+        </pattern>
+        <default>
+            <function>max</function>
+            <retention>
+                <age>0</age>
+                <precision>60</precision>
+            </retention>
+            <retention>
+                <age>3600</age>
+                <precision>300</precision>
+            </retention>
+            <retention>
+                <age>86400</age>
+                <precision>3600</precision>
+            </retention>
+        </default>
+    </graphite_rollup_example>
+</yandex>

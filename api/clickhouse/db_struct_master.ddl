@@ -8,6 +8,4 @@ CREATE TABLE IF NOT EXISTS db_weather.facts(
     humidity        Nullable(Float32),
     cloudiness      Nullable(Float32),
     wind       Nullable(Float32)
-) ENGINE = MergeTree()
-PARTITION BY city
-ORDER BY (city, measure_date)
+) ENGINE = Distributed(example_cluster, db_weather, facts, rand())

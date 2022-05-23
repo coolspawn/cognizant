@@ -5,7 +5,7 @@ info:
 servers:
   - url: http://127.0.0.1:8000
 paths:
-  /api/v1/historical_data/{capital}:
+  /api/v1/historical-data/{capital}:
     get:
       description: 'weather monitoring API'
       parameters:

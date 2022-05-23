@@ -4,10 +4,11 @@ overload:
   token_file: "token.txt"
 
 phantom:
-  address: localhost:8080 # [Target's address]:[target's port]
+  address: localhost:8000 # [Target's address]:[target's port]
   uris:
-    - /api/v1/historical_data/Vienna
-    - /ping
+    - /api/v1/get_temperature/Vienna?aggregation=max
+#    - /api/v1/historical-data/Sofia
+#    - /ping
   load_profile:
     load_type: rps
     schedule: line(1, 840, 2m)

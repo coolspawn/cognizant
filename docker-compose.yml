@@ -114,7 +114,6 @@ services:
     networks:
       - wa_network
 
-
   app_2:
     build:
       context: .

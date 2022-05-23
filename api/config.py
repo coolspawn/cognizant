@@ -1,5 +1,4 @@
 import os
-from functools import lru_cache
 
 from pydantic import BaseSettings
 
@@ -17,7 +16,9 @@ class GlobalConfig(BaseSettings):
     CH_HOST = 'ch_server'
     CH_PORT = 8123
     CH_PROT = 'http'
+
     CH_URL = f'{CH_PROT}://{CH_HOST}:{CH_PORT}/'
+    CH_SUBS = ['ch-sub-1', 'ch-sub-2']
 
     CELERY_BACKEND = 'redis'
     CELERY_BROKER = 'rabbit_mq'
@@ -39,7 +40,6 @@ class LocalConfig(GlobalConfig):
     CELERY_BACKEND = 'localhost'
     CELERY_BROKER = 'localhost'
 
-
 class CurrentConfig:
 
     def __init__(self, environment):
@@ -51,9 +51,4 @@ class CurrentConfig:
         return DevConfig()
 
 
-@lru_cache()
-def get_configuration():
-    return CurrentConfig(GlobalConfig().ENVIRONMENT)()
-
-
-config = get_configuration()
+config = CurrentConfig(GlobalConfig().ENVIRONMENT)()

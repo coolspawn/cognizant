@@ -5,6 +5,7 @@ celery==5.2.6
 pydantic==1.9.1
 clickhouse_driver==0.2.3
 aiochclient==2.1.0
+asynch==0.1.9
 pandas==1.4.2
 pytest_asyncio==0.18.3
 pytest

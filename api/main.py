@@ -1,4 +1,3 @@
-import os
 
 from api.clickhouse.async_connector import (close_async_connector,
                                             init_async_connector)

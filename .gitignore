@@ -132,3 +132,5 @@ dmypy.json
 /.dev.env
 /logs/
 /token.txt
+/api/clickhouse/sub-config.xml/
+/.clickhouse/
